@@ -2,7 +2,7 @@
 # Tm=100;n=10;k=3; frho=.6; ind=1
 library("stringr")
 
-mcHFplus <- function(Tm,n,k,frho,noCons){
+mcHFplus <- function(Tm,n,k,frho,noCons,nopois){
   
   inDirHFm  <- if(noCons){"Data/noCons/multiClub/"} else {"Data/withCons/multiClub/"}
   outDirHFm <- if(noCons){"Output/noCons/multiClub/"} else {"Output/withCons/multiClub/"}
@@ -12,13 +12,17 @@ mcHFplus <- function(Tm,n,k,frho,noCons){
   dirname  <- inDirHFm
   
   nocStr   <- if(noCons){"-noConsMlt"} else {"-withConsMlt"}
+  poistr  <- if(nopois){NULL} else {"pois"}
   
-  filename <- paste0("zZ_",Tm,"-",n,"-",k,"-",frho,nocStr,".rda")
+  
+  filename <- paste0("zZ_",Tm,"-",n,"-",k,"-",frho,nocStr,poistr,".rda")
+  
   zz       <- get(load(paste0(dirname,filename)))
-  lenz<-length(zz[[1]])
-  list   <- zz[[2]]
-  gammas <- zz[[3]]
+  lenz     <-length(zz[[1]])
+  list     <- zz[[2]]
+  gammas   <- zz[[3]]
   
+  list <- list[sapply(list, length)!=1]
   fsts<- sapply(list, function(x) x[1])  
   list<- list[order(fsts)]
   
@@ -90,7 +94,7 @@ mcHFplus <- function(Tm,n,k,frho,noCons){
   
   savedir <- outDirHFm
   outdir  <- paste0(savedir,"Results_",n,"-",k,nocStr,"_HF/")
-  filedir <- paste0(Tm,"-",frho,".rda")
+  filedir <- paste0(Tm,"-",frho,poistr,".rda")
   
   
   dir.create(outdir,recursive = TRUE)
