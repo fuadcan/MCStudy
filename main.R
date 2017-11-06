@@ -1,4 +1,5 @@
-setwd("~/Replication Files 2017/")
+# EN SON mcHFplus(200,30,6,0.2,F,F) bitti, sirada mcHFplus(50,30,6,0.6,F,F)
+setwd("~/MCStudy/")
 source("dataGen.R")
 source("mcAGK.R")
 source("mcAplus.R")

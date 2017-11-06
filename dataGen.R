@@ -168,7 +168,7 @@ dataGenplus<-function(Tm,n,k,frho,trial,noCons){
   
   outDir   <- if(noCons){"Data/noCons/multiClub/"} else {"Data/withCons/multiClub/"}
   dir.create(outDir,recursive = TRUE)
-  nocStr   <- if(noCons){"-noConsMlt_pois.rda"} else {"-withConsMlt_pois.rda"}
+  nocStr   <- if(noCons){"-noConsMltpois.rda"} else {"-withConsMltpois.rda"}
   fileName <-  paste0(outDir,"zZ_",Tm-1000,"-",n,"-",k,"-",frho,nocStr)
   
   save(outFile, file = fileName)

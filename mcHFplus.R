@@ -1,5 +1,5 @@
 
-# Tm=100;n=10;k=3; frho=.6; ind=1
+# Tm=50;n=10;k=2; frho=.2; ind=1; noCons =T; nopois=F
 library("stringr")
 
 mcHFplus <- function(Tm,n,k,frho,noCons,nopois){
@@ -12,7 +12,7 @@ mcHFplus <- function(Tm,n,k,frho,noCons,nopois){
   dirname  <- inDirHFm
   
   nocStr   <- if(noCons){"-noConsMlt"} else {"-withConsMlt"}
-  poistr  <- if(nopois){NULL} else {"pois"}
+  poistr  <- if(nopois){NULL} else {"_pois"}
   
   
   filename <- paste0("zZ_",Tm,"-",n,"-",k,"-",frho,nocStr,poistr,".rda")
