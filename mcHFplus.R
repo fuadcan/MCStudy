@@ -12,7 +12,7 @@ mcHFplus <- function(Tm,n,k,frho,noCons,nopois){
   dirname  <- inDirHFm
   
   nocStr   <- if(noCons){"-noConsMlt"} else {"-withConsMlt"}
-  poistr  <- if(nopois){NULL} else {"_pois"}
+  poistr  <- if(nopois){NULL} else {"pois"}
   
   
   filename <- paste0("zZ_",Tm,"-",n,"-",k,"-",frho,nocStr,poistr,".rda")
