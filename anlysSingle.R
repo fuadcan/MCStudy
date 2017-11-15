@@ -1,4 +1,4 @@
-# n<-10;clsize=5;Tm=100;frho=.2
+# n<-10;clsize=5;Tm=100;frho=.2;noCOns=T
 library("rugarch")
 hitRat <- function(maxScc,exc,clsize,n){
   UU <- maxScc; DU <- clsize-maxScc ; UD <- exc; DD <- n-clsize-exc
@@ -12,20 +12,20 @@ hitRat <- function(maxScc,exc,clsize,n){
 
 PTestHF<- function(dat){
 
-  gmms  <- dat[1,]; dat<-dat[-1,]
+  gmms    <- dat[1,]; dat<-dat[-1,]
   indlstA <- seq(1,nrow(dat),2); lstA <- dat[indlstA,]
   indlstR <- seq(2,nrow(dat),2); lstR <- dat[indlstR,]
   
   
-  actua <- (gmms==1)*1-(gmms!=1)*1
-  forecA<- matrix(1,nrow(lstA),ncol(lstA)); forecA[lstA!="c"]<- -1
-  forecR<- matrix(1,nrow(lstR),ncol(lstR)); forecR[lstR!="c"]<- -1   
+  actua  <- (gmms==1)*1-(gmms!=1)*1
+  forecA <- matrix(1,nrow(lstA),ncol(lstA)); forecA[lstA!="c"]<- -1
+  forecR <- matrix(1,nrow(lstR),ncol(lstR)); forecR[lstR!="c"]<- -1   
   
-  actua<- rep(actua,nrow(dat)/2)
-  dacA <- DACTest(c(t(forecA)),actua,"PT",.05)$Stat
+  actua  <- rep(actua,nrow(dat)/2)
+  dacA   <- DACTest(c(t(forecA)),actua,"PT",.05)$Stat
 
-  dacR <- DACTest(c(t(forecR)),actua,"PT",.05)$Stat
-  dac  <- c(dacA,dacR)
+  dacR   <- DACTest(c(t(forecR)),actua,"PT",.05)$Stat
+  dac    <- c(dacA,dacR)
     return(dac)
 }
 
@@ -69,37 +69,37 @@ anlysofoutptAGK<- function(Tm,n,clsize,noCons){
   
   
 
-  trials<-1000
+  trials<-100
   TTm <- trials*3
   nT  <- 3
   
   anlysOutp <- function(calcRep,clsize,frho,gmml){
     
-    ind<-frho*10
+    ind <- frho*10
     
     
-    indAdf  <- seq(1,TTm,nT)
-    indErs  <- seq(2,TTm,nT)
-    indKpss <- seq(3,TTm,nT)
+    indadf.01  <- seq(1,TTm,nT)
+    indadf.05  <- seq(2,TTm,nT)
+    indadf.1   <- seq(3,TTm,nT)
     
-    adfReps  <- apply(calcRep[[ind]][indAdf,],2,sum)
-    ersReps  <- apply(calcRep[[ind]][indErs,],2,sum)
-    kpssReps <- apply(calcRep[[ind]][indKpss,],2,sum)
+    adf.01  <- apply(calcRep[[ind]][indadf.01,],2,sum)
+    adf.05  <- apply(calcRep[[ind]][indadf.05,],2,sum)
+    adf.1   <- apply(calcRep[[ind]][indadf.1,],2,sum)
     
-    adfprf  <- sum(calcRep[[ind]][indAdf,1]==clsize & calcRep[[ind]][indAdf,2]==0)
-    ersprf  <- sum(calcRep[[ind]][indErs,1]==clsize & calcRep[[ind]][indErs,2]==0)
-    kpssprf <- sum(calcRep[[ind]][indKpss,1]==clsize & calcRep[[ind]][indKpss,2]==0)
+    adf.01prf  <- sum(calcRep[[ind]][indadf.01,1]==clsize & calcRep[[ind]][indadf.01,2]==0)
+    adf.05prf  <- sum(calcRep[[ind]][indadf.05,1]==clsize & calcRep[[ind]][indadf.05,2]==0)
+    adf.1prf   <- sum(calcRep[[ind]][indadf.1,1]==clsize & calcRep[[ind]][indadf.1,2]==0)
     
-    prfs <- c(adfprf,ersprf,kpssprf)
-    repss<- cbind(adfReps,ersReps,kpssReps)
+    prfs  <- c(adf.01prf,adf.05prf,adf.1prf)
+    repss <- cbind(adf.01,adf.05,adf.1)
     
     totclsize <- clsize*trials; totn <- n*trials
  
     hitReps <- sapply(1:3, function(x) hitRat(repss[1,x],repss[2,x],totclsize,totn))
-
+    rownames(hitReps) <- c("HitR", "H", "F", "KS")
     
-    anlysPT<-PTestAGK(gmml[[ind]])
-    rep<- rbind(hitReps,anlysPT,prfs)
+    anlysPT <- PTestAGK(gmml[[ind]])
+    rep     <- rbind(hitReps,anlysPT,prfs)
     
     return(rep)
   }
@@ -113,36 +113,47 @@ anlysofoutptAGK<- function(Tm,n,clsize,noCons){
   
 }
 
-anlysofoutptHF05<- function(Tm,n,clsize,noCons){
+anlysofoutptHF<- function(Tm,n,clsize,noCons){
   nocStr   <- if(noCons){"-noCons"} else {"-withCons"}
   dirName  <- if(noCons){"Output/noCons/singleClub/"} else {"Output/withCons/singleClub/"}
   
   calcRep<-list()
-  for(frho in c(2,6)){calcRep[[frho]]<- get(load(paste0(dirName,"Results_",n,"-",clsize,nocStr,"_HF/reportHF05-",Tm,"-",frho/10,".rda")))}
+  for(frho in c(2,6)){calcRep[[frho]]<- get(load(paste0(dirName,"Results_",n,"-",clsize,nocStr,"_HF/reportHF-",Tm,"-",frho/10,".rda")))}
   
   gmml<-list()
-  for(frho in c(2,6)){gmml[[frho]]<- get(load(paste0(dirName,"Results_",n,"-",clsize,nocStr,"_hf/gmmlHF05-",Tm,"-",frho/10,".rda")))}
+  for(frho in c(2,6)){gmml[[frho]]<- get(load(paste0(dirName,"Results_",n,"-",clsize,nocStr,"_hf/gmmlHF-",Tm,"-",frho/10,".rda")))}
   
-  
+  trials <- 100
+  TTm    <- trials*3
+  nT     <- 3
   
   anlysOutp <- function(calcRep,clsize,frho,gmml){
-    ind<-frho*10
+    ind <- frho*10
     
     calcRepA <- calcRep[[ind]][,c(1,2)]  
     calcRepR <- calcRep[[ind]][,c(3,4)]
     
-    perfA <- sum(calcRepA[,1]==clsize & calcRepA[,2]==0 )
-    perfR <- sum(calcRepR[,1]==clsize & calcRepR[,2]==0 )
+    HFA.01   <- calcRepA[rownames(calcRepA) == "crit01",]; HFR.01   <- calcRepR[rownames(calcRepR) == "crit01",]
+    HFA.05   <- calcRepA[rownames(calcRepA) == "crit05",]; HFR.05   <- calcRepR[rownames(calcRepR) == "crit05",]
+    HFA.1    <- calcRepA[rownames(calcRepA) == "crit1", ]; HFR.1    <- calcRepR[rownames(calcRepR) == "crit1", ]
     
-    #     ign<- clsize*ignFrac
-    hitRatA <- apply(calcRepA,2,sum)
-    hitRatR <- apply(calcRepR,2,sum)
+    perfA    <- sapply(list(HFA.01,HFA.05,HFA.1), function(d) sum(d[,1]==clsize & d[,2]==0 ))
+    perfR    <- sapply(list(HFR.01,HFR.05,HFR.1), function(d) sum(d[,1]==clsize & d[,2]==0 ))
     
-    trials<-1000
+    hitRatA  <- sapply(list(HFA.01,HFA.05,HFA.1), function(d) apply(d,2,sum))
+    hitRatR  <- sapply(list(HFR.01,HFR.05,HFR.1), function(d) apply(d,2,sum))
     
-    repA <- simplify2array(hitRat(hitRatA[[1]],hitRatA[[2]],clsize*trials,n*trials))
-    repR <- simplify2array(hitRat(hitRatR[[1]],hitRatR[[2]],clsize*trials,n*trials))
-    ptestAR <- PTestHF(gmml[[ind]])
+    trials <- 100
+    
+    repA <- apply(hitRatA, 2, function(hr) simplify2array(hitRat(hr[1],hr[2],clsize*trials,n*trials)))
+    repR <- apply(hitRatR, 2, function(hr) simplify2array(hitRat(hr[1],hr[2],clsize*trials,n*trials)))
+    
+    gmmls   <- lapply(c("01","05","1"), function(crit) gmml[[ind]][rownames(gmml[[ind]]) %in% c("gammas",paste0(c("abs","rel"), crit)), ])
+    # TO BE CONTUINUED HERE
+    ptestAR <- PTestHF(gmml[[ind]]) 
+    
+    colnames(repA) <- colnames(repR) <- c(".01",".05",".1")
+    rownames(repA) <- rownames(repR) <- c("HitRat","H","F","KS")
     
     repA<- c(repA,ptestAR[[1]],perfA)
     repR<- c(repR,ptestAR[[2]],perfR)
@@ -159,12 +170,12 @@ anlysofoutptHF05<- function(Tm,n,clsize,noCons){
   return(reps)
 }
 
-
+# TmVec <- c(50,75,100,200); n <- c(10,20,30,40); clsize <- c(3,5,7,10)
 
 overallAnlys <- function(TmVec,n,clsize,noCons) {
   nlyAGK     <- lapply(TmVec, function(Tm) anlysofoutptAGK(Tm,n,clsize,noCons))
   nlyAGK     <- lapply(1:6, function(x) rbind(nlyAGK[[1]][[x]],nlyAGK[[2]][[x]],nlyAGK[[3]][[x]]))
-  nlyHF05    <- lapply(TmVec, function(Tm) anlysofoutptHF05(Tm,n,clsize,noCons))
+  nlyHF05    <- lapply(TmVec, function(Tm) anlysofoutptHF(Tm,n,clsize,noCons))
   nlyHF05    <- lapply(1:6, function(x) rbind(nlyHF05[[1]][[x]],nlyHF05[[2]][[x]],nlyHF05[[3]][[x]]))
   
   ovrNly   <- lapply(1:6, function(x) cbind(nlyAGK[[x]],nlyHF05[[x]][,(!noCons)+1]))
@@ -186,8 +197,10 @@ overall <- function(TmVec,nVec,clsize,noCons) {
 
 
 overallRep<-function(){
-  rep5T  <- overall(c(50,75,100),c(10,20,30,40), 5,T)
-  rep10T <- overall(c(50,75,100),c(20,30,40)   , 10,T)
+  rep3T  <- overall(c(50,75,100,200),c(10,20,30,40), 3,T)
+  rep5T  <- overall(c(50,75,100,200),c(10,20,30,40), 5,T)
+  rep7T  <- overall(c(50,75,100,200),c(20,30,40)   , 7,T)
+  rep10T <- overall(c(50,75,100,200),c(20,30,40)   , 10,T)
   rep5F  <- overall(c(50,75,100),c(10,20,30,40), 5,F)
   rep10F <- overall(c(50,75,100),c(20,30,40)   , 10,F)
   

@@ -1,28 +1,11 @@
-c11      c18      c27      c28      c29      
-c2       c8       c13      
-c10      c23      
-c3       c30      
-c21      c22      
-c5       c16      
-c26      
-c15      
-c14      
-c12      
-c17      
-c19      
+c1       c5       c6       
+c2       c4       c8       
+c10      
+c7       
+c3       
+c9       
+brkpnt
+c1       c5       c6       c10      
+c2       c3       c4       c8       
 c9       
 c7       
-c6       
-c20      
-c4       
-c24      
-c25      
-c1       
-brkpnt
-c2       c8       c9       c10      c13      c20      c23      
-c4       c5       c6       c16      c24      
-c11      c18      c27      c28      c29      
-c7       c14      c17      c26      
-c1       c12      c19      
-c3       c25      c30      
-c15      c21      c22      
