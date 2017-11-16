@@ -143,22 +143,20 @@ anlysofoutptHF<- function(Tm,n,clsize,noCons){
     hitRatA  <- sapply(list(HFA.01,HFA.05,HFA.1), function(d) apply(d,2,sum))
     hitRatR  <- sapply(list(HFR.01,HFR.05,HFR.1), function(d) apply(d,2,sum))
     
-    trials <- 100
     
     repA <- apply(hitRatA, 2, function(hr) simplify2array(hitRat(hr[1],hr[2],clsize*trials,n*trials)))
     repR <- apply(hitRatR, 2, function(hr) simplify2array(hitRat(hr[1],hr[2],clsize*trials,n*trials)))
     
     gmmls   <- lapply(c("01","05","1"), function(crit) gmml[[ind]][rownames(gmml[[ind]]) %in% c("gammas",paste0(c("abs","rel"), crit)), ])
-    # TO BE CONTUINUED HERE
-    ptestAR <- PTestHF(gmml[[ind]]) 
+    ptestAR <- sapply(gmmls, PTestHF)
     
-    colnames(repA) <- colnames(repR) <- c(".01",".05",".1")
     rownames(repA) <- rownames(repR) <- c("HitRat","H","F","KS")
     
-    repA<- c(repA,ptestAR[[1]],perfA)
-    repR<- c(repR,ptestAR[[2]],perfR)
+    repA <- rbind(repA,ptestAR[1,],perfA)
+    repR <- rbind(repR,ptestAR[2,],perfR)
     
     anlys <- cbind(repA,repR)
+    colnames(anlys) <- unlist(lapply(c("A","R"), function(l) paste0(l,c(".01",".05",".1"))))
     
     return(anlys)
   }
@@ -170,17 +168,17 @@ anlysofoutptHF<- function(Tm,n,clsize,noCons){
   return(reps)
 }
 
-# TmVec <- c(50,75,100,200); n <- c(10,20,30,40); clsize <- c(3,5,7,10)
+# TmVec <- c(50,75,100,200); nVec <- c(10,20,30,40); clsize <- c(3,5,7,10)
 
 overallAnlys <- function(TmVec,n,clsize,noCons) {
-  nlyAGK     <- lapply(TmVec, function(Tm) anlysofoutptAGK(Tm,n,clsize,noCons))
-  nlyAGK     <- lapply(1:6, function(x) rbind(nlyAGK[[1]][[x]],nlyAGK[[2]][[x]],nlyAGK[[3]][[x]]))
-  nlyHF05    <- lapply(TmVec, function(Tm) anlysofoutptHF(Tm,n,clsize,noCons))
-  nlyHF05    <- lapply(1:6, function(x) rbind(nlyHF05[[1]][[x]],nlyHF05[[2]][[x]],nlyHF05[[3]][[x]]))
+  nlyAGK   <- lapply(TmVec, function(Tm) anlysofoutptAGK(Tm,n,clsize,noCons))
+  nlyAGK   <- lapply(1:length(nlyAGK[[1]]), function(x) do.call(rbind,lapply(nlyAGK, function(n) n[[x]])))
+  nlyHF    <- lapply(TmVec, function(Tm) anlysofoutptHF(Tm,n,clsize,noCons))
+  nlyHF    <- lapply(1:length(nlyHF[[1]]), function(x)  do.call(rbind,lapply(nlyHF, function(n) n[[x]])))
   
-  ovrNly   <- lapply(1:6, function(x) cbind(nlyAGK[[x]],nlyHF05[[x]][,(!noCons)+1]))
-  ovrNly   <- lapply(1:6, function(x) ovrNly[[x]][order(rep(c(.2,.6),3)),])
-  for(i in 1:6){colnames(ovrNly[[i]]) <- c("adf","ers","kpss","HF")}
+  ovrNly   <- lapply(1:length(nlyAGK), function(x) cbind(nlyAGK[[x]],nlyHF[[x]][,grepl("A",colnames(nlyHF[[x]]))]))
+  ovrNly   <- lapply(1:length(nlyAGK), function(x) ovrNly[[x]][order(rep(c(.2,.6),length(TmVec))),])
+  for(i in 1:length(ovrNly)){colnames(ovrNly[[i]])[1:3] <- c("adf.01","adf.05","adf.1")}
   
   return(ovrNly)
   
@@ -188,9 +186,10 @@ overallAnlys <- function(TmVec,n,clsize,noCons) {
 
 
 overall <- function(TmVec,nVec,clsize,noCons) {
+  
   tempList <- lapply(nVec,  function(n) overallAnlys(TmVec,n,clsize,noCons))
-  tempList <- lapply(1:6, function(y) lapply(1:length(nVec), function(x) tempList[[x]][[y]]))
-  tempList <- lapply(1:6, function(x) do.call(rbind,tempList[[x]]))
+  tempList <- lapply(1:length(tempList[[1]]), function(y) lapply(1:length(nVec), function(x) tempList[[x]][[y]]))
+  tempList <- lapply(tempList, function(tlist) do.call(rbind,tlist))
   
   return(tempList)
 }
@@ -201,20 +200,26 @@ overallRep<-function(){
   rep5T  <- overall(c(50,75,100,200),c(10,20,30,40), 5,T)
   rep7T  <- overall(c(50,75,100,200),c(20,30,40)   , 7,T)
   rep10T <- overall(c(50,75,100,200),c(20,30,40)   , 10,T)
-  rep5F  <- overall(c(50,75,100),c(10,20,30,40), 5,F)
-  rep10F <- overall(c(50,75,100),c(20,30,40)   , 10,F)
+  rep3F  <- overall(c(50,75,100,200),c(10,20,30,40), 3,F)
+  rep5F  <- overall(c(50,75,100,200),c(10,20,30,40), 5,F)
+  rep7F  <- overall(c(50,75,100,200),c(20,30,40)   , 7,F)
+  rep10F <- overall(c(50,75,100,200),c(20,30,40)   , 10,F)
   
-  noConst   <- lapply(1:6, function(x) rbind(rep5T[[x]],rep10T[[x]]))
-  withConst <- lapply(1:6, function(x) rbind(rep5F[[x]],rep10F[[x]]))
+  noConst   <- lapply(1:length(rep3T), function(x) rbind(rep3T[[x]],rep5T[[x]],rep7T[[x]],rep10T[[x]]))
+  withConst <- lapply(1:length(rep3F), function(x) rbind(rep3F[[x]],rep5F[[x]],rep7F[[x]],rep10F[[x]]))
   
+  dtType3  <- sapply(c(10,20,30,40), function(n) 
+    sapply(c(.2,.6), function(frho) sapply(c(50,75,100,200), function(Tm) paste(3,n,frho,Tm,sep = "-"))))
   dtType5  <- sapply(c(10,20,30,40), function(n) 
-    sapply(c(.2,.6), function(frho) sapply(c(50,75,100), function(Tm) paste(5,n,frho,Tm,sep = "-"))))
+    sapply(c(.2,.6), function(frho) sapply(c(50,75,100,200), function(Tm) paste(5,n,frho,Tm,sep = "-"))))
+  dtType7  <- sapply(c(20,30,40), function(n) 
+    sapply(c(.2,.6), function(frho) sapply(c(50,75,100,200), function(Tm) paste(7,n,frho,Tm,sep = "-"))))
   dtType10 <- sapply(c(20,30,40), function(n) 
-    sapply(c(.2,.6), function(frho) sapply(c(50,75,100), function(Tm) paste(10,n,frho,Tm,sep = "-"))))
-  dtType   <-c(c(dtType5),c(dtType10))
+    sapply(c(.2,.6), function(frho) sapply(c(50,75,100,200), function(Tm) paste(10,n,frho,Tm,sep = "-"))))
+  dtType   <-c(c(dtType3),c(dtType5),c(dtType7),c(dtType10))
   
-  for(i in 1:6){rownames(noConst[[i]]) <- dtType}; noConst<-noConst[2:6]
-  for(i in 1:6){rownames(withConst[[i]])<-dtType} ;withConst<-withConst[2:6]
+  for(i in 1:6){rownames(noConst[[i]]) <- dtType}; noConst   <- noConst[2:6]
+  for(i in 1:6){rownames(withConst[[i]])<-dtType} ;withConst <- withConst[2:6]
   
   for(i in 1:5){colnames(noConst[[i]]) <- paste0(colnames(noConst[[i]]),"_",c("H","F","KS","PT","Perf")[i])}
   for(i in 1:5){colnames(withConst[[i]]) <- paste0(colnames(withConst[[i]]),"_",c("H","F","KS","PT","Perf")[i])}

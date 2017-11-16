@@ -1,40 +1,51 @@
-# n<-20;Tm=50;frho=0.6;k=4; noCons<-T
+# n<-20;Tm=50;frho=0.6;k=4; noCons<-T;nopois <- F
 
-nlyzA <- function(Tm,n,k,frho,noCons){
+nlyzA <- function(Tm,n,k,frho,noCons,nopois){
   
   nocStr   <- if(noCons){"noCons"} else {"withCons"}
+  nopoistr <- if(nopois){NULL} else {"pois"}
   dir <- paste0("Output/",nocStr,"/multiClub/")
-  filename <- paste0("Results_",n,"-",k,"-A-",nocStr,"Mlt/reportA-",Tm,"-",frho,".rda")
+  filename <- paste0("Results_",n,"-",k,"-A-",nocStr,"Mlt/reportA-",Tm,"-",frho,nopoistr,".rda")
   
   rep <- get(load(paste0(dir,filename)))
   
-  nlyz <- sum(rep)
-  
+  nlyz <- apply(rep,1,sum)
+  names(nlyz) <- c(".01",".05",".1")
   return(nlyz)
   
 }
 
 
-nlyzHF05 <- function(Tm,n,k,frho,noCons){
+nlyzHF <- function(Tm,n,k,frho,noCons,nopoistr){
   
   nocStr   <- if(noCons){"noCons"} else {"withCons"}
-  dir <- paste0("Output/",nocStr,"/multiClub/")
-  filename <- paste0(dir,"Results_",n,"-",k,"-",nocStr,"Mlt_HF/reportHF05-",Tm,"-",frho,".rda")
-  repHF<-get(load(filename))[,(!noCons)+1]
-  
-  nlyz <- sum(repHF)
-  
+  nopoistr <- if(nopois){NULL} else {"pois"}
+  dir   <- paste0("Output/",nocStr,"/multiClub/")
+  filename <- paste0(dir,"Results_",n,"-",k,"-",nocStr,"Mlt_HF/reportHF-",Tm,"-",frho,nopoistr,".rda")
+  repHF <- get(load(filename))[,(!noCons)+1]
+  repHF <- cbind(repHF[names(repHF) == "crit01"],repHF[names(repHF) == "crit05"],repHF[names(repHF) == "crit1"])
+  nlyz  <- apply(repHF,2,sum)
+  names(nlyz) <- c(".01",".05",".1")
   return(nlyz)
 }
 
 overallnlyz<- function(TmVec,n,k,noCons){
   
-  nlyzA5<- lapply(c(.2,.6), function(frho) sapply(TmVec, function(Tm)  nlyzA(Tm,n,k,frho,1)))
-  nlyzHF<- lapply(c(.2,.6), function(frho) sapply(TmVec, function(Tm)  nlyzHF05(Tm,n,k,frho,1)))
+  anlyzA  <- lapply(c(.2,.6), function(frho) t(sapply(TmVec, function(Tm)  nlyzA(Tm,n,k,frho,noCons,T))))
+  anlyzHF <- lapply(c(.2,.6), function(frho) t(sapply(TmVec, function(Tm)  nlyzHF(Tm,n,k,frho,noCons,T))))
   
-  nlyz <- cbind(unlist(nlyzA5),unlist(nlyzHF))
+  anlyzA_P  <- lapply(c(.2,.6), function(frho) t(sapply(TmVec, function(Tm)  nlyzA(Tm,n,k,frho,noCons,F))))
+  anlyzHF_P <- lapply(c(.2,.6), function(frho) t(sapply(TmVec, function(Tm)  nlyzHF(Tm,n,k,frho,noCons,F))))
   
-  colnames(nlyz)<- c("adf","HF")
+  
+  nlyz   <- cbind(do.call(rbind,anlyzA),do.call(rbind,anlyzHF))
+  nlyz_P <- cbind(do.call(rbind,anlyzA),do.call(rbind,anlyzHF))
+  
+  rownames(nlyz)   <- c(paste0("nopois.2","-",TmVec),paste0("nopois.6","-",TmVec))
+  rownames(nlyz_P) <- c(paste0("pois.2","-",TmVec),paste0("pois.6","-",TmVec))
+  colnames(nlyz) <- colnames(nlyz_P) <- c(paste0("adf",colnames(nlyz)[1:3]),paste0("HF",colnames(nlyz)[1:3]))
+  
+  nlyz <- rbind(nlyz,nlyz_P)
   
   return(nlyz)  
   
@@ -42,19 +53,21 @@ overallnlyz<- function(TmVec,n,k,noCons){
 }
 
 overallRepMulti <- function(){
-a1<- lapply(c(T,F), function(nc) lapply(c(2,3), function(k) overallnlyz(c(50,75,100),10,k,nc)))
-a2<- lapply(c(T,F), function(nc) lapply(c(4,5), function(k) overallnlyz(c(50,75,100),20,k,nc)))
-a3<- lapply(c(T,F), function(nc) lapply(c(5,6), function(k) overallnlyz(c(50,75,100),30,k,nc)))
-a4<- lapply(c(T,F), function(nc) lapply(c(7,8), function(k) overallnlyz(c(50,75,100),40,k,nc)))
+a1<- lapply(c(T,F), function(nc) lapply(c(2,3), function(k) overallnlyz(c(50,75,100,200),10,k,nc)))
+a2<- lapply(c(T,F), function(nc) lapply(c(4,5), function(k) overallnlyz(c(50,75,100,200),20,k,nc)))
+a3<- lapply(c(T,F), function(nc) lapply(c(5,6), function(k) overallnlyz(c(50,75,100,200),30,k,nc)))
+a4<- lapply(c(T,F), function(nc) lapply(c(7,8), function(k) overallnlyz(c(50,75,100,200),40,k,nc)))
 
 noConst   <- do.call(rbind,c(a1[[1]],a2[[1]],a3[[1]],a4[[1]]))
-withConst <- do.call(rbind,c(a1[[1]],a2[[1]],a3[[1]],a4[[1]]))
+withConst <- do.call(rbind,c(a1[[2]],a2[[2]],a3[[2]],a4[[2]]))
 
 rep <- cbind(noConst,withConst)
-colnames(rep) <- c("adf_noInt","HF_noInt","adf_wInt","HF_wInt")
+colnames(rep) <- c("adf.01_noInt","adf.05_noInt","adf.1_noInt","HF.01_noInt","HF.05_noInt","HF.1_noInt",
+                   "adf.01_wInt","adf.05_wInt","adf.1_wInt","HF.01_wInt","HF.05_wInt","HF.1_wInt")
 
-dtType  <- sapply(c("2-10","3-10","4-20","5-20","5-30","6-30","7-40","8-40"), function(kn) 
-  sapply(c(.2,.6), function(frho) sapply(c(50,75,100), function(Tm) paste(kn,frho,Tm,sep = "-"))))
+dtType  <- sapply(c("2-10","3-10","4-20","5-20","5-30","6-30","7-40","8-40"), function(kn)
+  sapply(c("nopois","pois"), function(pois) sapply(c(".2",".6"), function(frho) 
+    sapply(c(50,75,100,200), function(Tm) paste(kn,pois,frho,Tm,sep = "-")))))
 
 rownames(rep) <- c(dtType)
 
