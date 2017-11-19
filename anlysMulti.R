@@ -16,7 +16,7 @@ nlyzA <- function(Tm,n,k,frho,noCons,nopois){
 }
 
 
-nlyzHF <- function(Tm,n,k,frho,noCons,nopoistr){
+nlyzHF <- function(Tm,n,k,frho,noCons,nopois){
   
   nocStr   <- if(noCons){"noCons"} else {"withCons"}
   nopoistr <- if(nopois){NULL} else {"pois"}
@@ -39,7 +39,7 @@ overallnlyz<- function(TmVec,n,k,noCons){
   
   
   nlyz   <- cbind(do.call(rbind,anlyzA),do.call(rbind,anlyzHF))
-  nlyz_P <- cbind(do.call(rbind,anlyzA),do.call(rbind,anlyzHF))
+  nlyz_P <- cbind(do.call(rbind,anlyzA_P),do.call(rbind,anlyzHF_P))
   
   rownames(nlyz)   <- c(paste0("nopois.2","-",TmVec),paste0("nopois.6","-",TmVec))
   rownames(nlyz_P) <- c(paste0("pois.2","-",TmVec),paste0("pois.6","-",TmVec))

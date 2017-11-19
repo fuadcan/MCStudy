@@ -1,4 +1,4 @@
-# n<-10;clsize=5;Tm=100;frho=.2;noCOns=T
+# n<-10;clsize=5;Tm=100;frho=.2;noCOns=F
 library("rugarch")
 hitRat <- function(maxScc,exc,clsize,n){
   UU <- maxScc; DU <- clsize-maxScc ; UD <- exc; DD <- n-clsize-exc
@@ -176,7 +176,8 @@ overallAnlys <- function(TmVec,n,clsize,noCons) {
   nlyHF    <- lapply(TmVec, function(Tm) anlysofoutptHF(Tm,n,clsize,noCons))
   nlyHF    <- lapply(1:length(nlyHF[[1]]), function(x)  do.call(rbind,lapply(nlyHF, function(n) n[[x]])))
   
-  ovrNly   <- lapply(1:length(nlyAGK), function(x) cbind(nlyAGK[[x]],nlyHF[[x]][,grepl("A",colnames(nlyHF[[x]]))]))
+  nocstr <- if(noCons){"A"} else {"R"}
+  ovrNly   <- lapply(1:length(nlyAGK), function(x) cbind(nlyAGK[[x]],nlyHF[[x]][,grepl(nocstr,colnames(nlyHF[[x]]))]))
   ovrNly   <- lapply(1:length(nlyAGK), function(x) ovrNly[[x]][order(rep(c(.2,.6),length(TmVec))),])
   for(i in 1:length(ovrNly)){colnames(ovrNly[[i]])[1:3] <- c("adf.01","adf.05","adf.1")}
   
